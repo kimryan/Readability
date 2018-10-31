@@ -1,5 +1,8 @@
 Revision history for Perl CPAN module Lingua::En::Fathom
 
+1.21 31 Oct 2018
+    Updated main.t
+    
 1.20 31 Oct 2018
     Renamed github repo to 'Readability'
     Used Lingua::EN::Sentence instead of a regexp to get a more accurate sentence count 

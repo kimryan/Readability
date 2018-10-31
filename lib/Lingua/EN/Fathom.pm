@@ -270,7 +270,7 @@ use Lingua::EN::Sentence;
 use strict;
 use warnings;
 
-our $VERSION = '1.20';
+our $VERSION = '1.21';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
