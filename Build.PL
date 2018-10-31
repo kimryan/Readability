@@ -26,7 +26,7 @@ Module::Build -> new
     {
         resources =>
         {
-              repository => 'https://github.com/kimryan/Lingua-EN-Fathom'
+              repository => 'https://github.com/kimryan/Readability'
         }
     }     
 ) -> create_build_script();

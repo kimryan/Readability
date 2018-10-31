@@ -1,8 +1,15 @@
 Revision history for Perl CPAN module Lingua::En::Fathom
 
+1.20 31 Oct 2018
+    Renamed github repo to 'Readability'
+    Used Lingua::EN::Sentence instead of a regexp to get a more accurate sentence count 
+
+1.19 15 Sep 2016
+    Set github as repository
+
 1.18 7 Apr 2015
     removed indirect object notation for 'new' method
-    Fix for #102898, no minimim version set for warnings in Build.PL, to support very old versions of Perl
+    Fix for #102898, no minimum version set for warnings in Build.PL, to support very old versions of Perl
     
 1.17 20 Mar 2015
     Added prerequiste moudule to Build.PL
@@ -17,7 +24,7 @@ Revision history for Perl CPAN module Lingua::En::Fathom
 
 1.14 31 May 2011
     Changed main.t to use 'like' instead of 'if' when testing for floating
-    point numbers. This means tests are independant of machine precision
+    point numbers. This means tests are independent of machine precision
 
 1.13 30 May 2011
     Added more tests to main.t
@@ -48,7 +55,6 @@ Revision history for Perl CPAN module Lingua::En::Fathom
     Fixed error in calculation of Fog index, thanks to Trevor Jenkins
     Added method to get num_complex_words
     Added demo_recurse.pl
-
 
 1.05 19 May 2001
     Renamed _analyse_line subroutine to _analyse_words
