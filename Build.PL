@@ -20,7 +20,9 @@ Module::Build -> new
        locale => 1.00,
        strict => 1.04,
        warnings => 0,
-       Lingua::EN::Syllable => 0.28
+       Lingua::EN::Syllable => 0.28,
+       Lingua::EN::Sentence => 0.28
+       
     },
     meta_merge =>
     {

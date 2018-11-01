@@ -270,7 +270,7 @@ use Lingua::EN::Sentence;
 use strict;
 use warnings;
 
-our $VERSION = '1.21';
+our $VERSION = '1.22';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
@@ -577,40 +577,6 @@ sub _analyse_words
          $text->{num_complex_words}++;
       }
    }
-   ## Remove full stops to denote common abbreviations. By requiring a following space
-   ## we know the '.' is not also ending the sentence.
-   #
-   ## People's titles
-   #$one_line =~ s/Mr\. /Mr /ig;
-   #$one_line =~ s/Mrs\. /Mrs /ig;
-   #$one_line =~ s/Ms\. /Ms /ig;
-   #$one_line =~ s/M\/s\. /M\/s /ig;
-   #$one_line =~ s/Dr\. /Dr /ig;
-   #$one_line =~ s/Prof\. /Prof /ig;
-   #$one_line =~ s/Det\. /Det /ig;
-   #$one_line =~ s/Insp\. /Insp /ig;
-   #
-   ## Commercial abbreviations
-   #$one_line =~ s/Pty\. /Pty /ig;
-   #$one_line =~ s/PLC\. /PLC /ig;
-   #$one_line =~ s/Ltd\. /Ltd /ig;
-   #$one_line =~ s/Inc\. /Inc /ig;
-   #
-   ## Other abbreviations
-   #$one_line =~ s/etc\. /etc /ig;
-   #$one_line =~ s/vs\. /vs /ig;
-   #
-   #
-   ## Remove quotation marks as a quote followed by a full stop will not be
-   ## correctly detected by the following regexps.
-   #$one_line =~ s/"//g;
-   #$one_line =~ s/'//g;
-
-   # Now search for '.', '?' or '!'  at the end of the normalised sentence.
-   # while ( $one_line =~ /\b\s*[.!?]\s*\b/g ) { $text->{num_sentences}++ }
-   # Check for final sentence, with no following words.
-   # $one_line =~ /\b\s*[.!?]\s*$/g and $text->{num_sentences}++;
-
 
    return($text);
 }

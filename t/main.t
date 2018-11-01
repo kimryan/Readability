@@ -6,7 +6,7 @@
 
 use warnings;
 use strict;
-use Test::More tests => 10;
+use Test::More tests => 7;
 
 BEGIN {
 
@@ -24,7 +24,6 @@ a sentence.
 
 };
 
-
 my $text = Lingua::EN::Fathom->new();
 $text->analyse_block($sample);
 
@@ -34,9 +33,3 @@ is( $text->num_sentences,      4,                'sub num_sentences' );
 is( $text->num_text_lines,     5,                'sub num_text_lines' );
 is( $text->num_blank_lines,    4,                'sub num_blank_lines' );
 is( $text->num_paragraphs,     1,                'sub num_paragraphs' );
-
-# When checking floating point values, precision can vary across hardware. So use
-# a regular expression to test the first portion of the number
-like( $text->percent_complex_words, qr/7.40740740740741/, 'sub percent_complex_words' );
-like( $text->words_per_sentence,    qr/^13.5/, 'sub words_per_sentence' );
-like( $text->fog,                   qr/^8.36296296296296/, 'sub fog' );
