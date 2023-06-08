@@ -1,7 +1,11 @@
 Revision history for Perl CPAN module Lingua::En::Fathom
 
+1.23 6 Jun 2023
+    Initialised all values prior to analyse. Thanks to Jeffrey Grace for the fix
+    Improved documentation
+
 1.22 1 Nov 2018
-    Added prerequsitie module Lingua::En::Sentence to build files
+    Added prerequisite module Lingua::EN:Sentence to build files
     Updated main.t
 
 1.21 31 Oct 2018

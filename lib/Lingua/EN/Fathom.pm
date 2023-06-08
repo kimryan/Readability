@@ -8,41 +8,43 @@ Lingua::EN::Fathom - Measure readability of English text
 
     my $text = Lingua::EN::Fathom->new();
     
-    # Analyse contents of a text file
     $text->analyse_file("sample.txt"); # Analyse contents of a text file
+    
+    $accumulate = 1; 
+    $text->analyse_block($text_string,$accumulate); # Analyse contents of a text string
 
-    $accumulate = 1;
-    # Analyse contents of a text string
-    $text->analyse_block($text_string,$accumulate);
+    # Methods to return statistics on the analysed text
+    $text->num_chars;
+    $text->num_words;
+    $text->percent_complex_words;
+    $text->num_sentences;
+    $text->num_text_lines;
+    $text->num_blank_lines;
+    $text->num_paragraphs;
+    $text->syllables_per_word;
+    $text->words_per_sentence;
+    $text->unique_words;
+    $text->fog;
+    $text->flesch;
+    $text->kincaid;
+    
+    # Call all of the above methods and present as a formatted report
+    print($text->report);
+    
+    # get a hash of unique words, keyed by word  and occurrence as the value
+    $text->unique_words
 
-    # TO Do, remove repetition
-    $num_chars             = $text->num_chars;
-    $num_words             = $text->num_words;
-    $percent_complex_words = $text->percent_complex_words;
-    $num_sentences         = $text->num_sentences;
-    $num_text_lines        = $text->num_text_lines;
-    $num_blank_lines       = $text->num_blank_lines;
-    $num_paragraphs        = $text->num_paragraphs;
-    $syllables_per_word    = $text->syllables_per_word;
-    $words_per_sentence    = $text->words_per_sentence;
-
-   # comment needed
+    # Print a list of unique words
     %words = $text->unique_words;
     foreach $word ( sort keys %words )
     {
       print("$words{$word} :$word\n");
     }
-
-    $fog     = $text->fog;
-    $flesch  = $text->flesch;
-    $kincaid = $text->kincaid;
-
-    print($text->report);
-
+   
 
 =head1 REQUIRES
 
-Perl, version 5.001 or higher, Lingua::EN::Syllable
+Lingua::EN::Syllable, Lingua::EN::Sentence
 
 
 =head1 DESCRIPTION
@@ -191,7 +193,6 @@ This score rates text on U.S. grade school level. So a score of 8.0 means
 that the document can be understood by an eighth grader. A score of 7.0 to
 8.0 is considered to be optimal.
 
-
 =head2 unique_words
 
 Returns a hash of unique words. The words (in lower case) are held in
@@ -232,8 +233,8 @@ L<Lingua::EN::Syllable>,L<Lingua::EN::Sentence>,L<B::Fathom>
 
 =head1 POSSIBLE EXTENSIONS
 
-   Count white space and punctuation characters
-   Allow user control over what strictly defines a word 
+Count white space and punctuation characters
+Allow user control over what strictly defines a word 
 
 =head1 LIMITATIONS
 
@@ -254,7 +255,7 @@ Lingua::EN::Fathom was written by Kim Ryan <kimryan at cpan dot org>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2018 Kim Ryan. All rights reserved.
+Copyright (c) 2023 Kim Ryan. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -270,7 +271,7 @@ use Lingua::EN::Sentence;
 use strict;
 use warnings;
 
-our $VERSION = '1.22';
+our $VERSION = '1.23';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
@@ -281,6 +282,7 @@ sub new
 
    my $text = {};
    bless($text,$class);
+   $text = &_initialize($text);
    return($text);
 }
 #------------------------------------------------------------------------------
@@ -293,7 +295,7 @@ sub analyse_file
 
    unless ( $accumulate )
    {
-      $text = &_initialize($text);
+      $text = _initialize($text);
    }
 
    $text->{file_name} = $file_name;
@@ -312,7 +314,7 @@ sub analyse_file
    {
       my $one_line = $_;
       $all_text .= $one_line;
-      ($in_paragraph,$text) = &_analyse_line($text,$one_line,$in_paragraph);
+      ($in_paragraph,$text) = _analyse_line($text,$one_line,$in_paragraph);
    }
    close(IN_FH);
    
@@ -333,7 +335,7 @@ sub analyse_block
 
    unless ( $accumulate )
    {
-      $text = &_initialize($text);
+      $text = _initialize($text);
    }
 
    unless ( $block )
@@ -349,7 +351,7 @@ sub analyse_block
    my $one_line;
    foreach $one_line ( @all_lines )
    {
-      ($in_paragraph,$text) = &_analyse_line($text,$one_line,$in_paragraph);
+      ($in_paragraph,$text) = _analyse_line($text,$one_line,$in_paragraph);
    }
    
    my $sentences= Lingua::EN::Sentence::get_sentences($block);        
@@ -454,8 +456,8 @@ sub unique_words
 sub report
 {
    my $text = shift;
-
    my $report = '';
+   
 
    $text->{file_name} and
    $report .= sprintf("File name                  : %s\n",$text->{file_name} );
@@ -489,6 +491,9 @@ sub _initialize
    $text->{num_syllables} = 0;
    $text->{num_words} = 0;
    $text->{num_complex_words} = 0;
+   $text->{syllables_per_word} = 0;
+   $text->{words_per_sentence} = 0;
+   $text->{percent_complex_words} = 0;
    $text->{num_text_lines} = 0;
    $text->{num_blank_lines} = 0;
    $text->{num_paragraphs} = 0;
@@ -496,11 +501,9 @@ sub _initialize
    $text->{unique_words} = ();
    $text->{file_name} = '';
 
-
    $text->{fog} = 0;
    $text->{flesch} = 0;
    $text->{kincaid} = 0;
-
 
    return($text);
 }
@@ -515,7 +518,7 @@ sub _analyse_line
    if ( $one_line =~ /\w/ )
    {
       chomp($one_line);
-      $text = &_analyse_words($text,$one_line);
+      $text = _analyse_words($text,$one_line);
       $text->{num_text_lines}++;
    
       unless ( $in_paragraph )
@@ -545,7 +548,7 @@ sub _analyse_words
    
    # Ignore words like  'Mr.', K12, &, X.Y.Z ...
    # It could be argued that Mr. is a word, but this approach should detect most of the non words
-   # whivh have punctuation or numbers in them
+   # which have punctuation or numbers in them
    
    while ( $one_line =~ /\b([a-z][-'a-z]*)\b/ig )
    {
@@ -589,7 +592,6 @@ sub _calculate_readability
 
    if ( $text->{num_sentences} and $text->{num_words} )
    {
-
       $text->{words_per_sentence} = $text->{num_words} / $text->{num_sentences};
       $text->{syllables_per_word} = $text->{num_syllables} / $text->{num_words};
       $text->{percent_complex_words} =
@@ -607,6 +609,7 @@ sub _calculate_readability
    {
       $text->{words_per_sentence} = 0;
       $text->{syllables_per_word} = 0;
+      $text->{num_complex_words} = 0;
       $text->{fog} = 0;
       $text->{flesch} = 0;
       $text->{kincaid} = 0;
