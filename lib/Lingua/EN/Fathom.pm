@@ -2,7 +2,7 @@
 
     Lingua::EN::Fathom - Measure readability of English text
     
-    =head1 SYNOPSIS
+=head1 SYNOPSIS
     
     use Lingua::EN::Fathom;
     
