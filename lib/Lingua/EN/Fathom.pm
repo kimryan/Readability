@@ -1,25 +1,26 @@
 =head1 NAME
 
-Lingua::EN::Fathom - Measure readability of English text
-
-=head1 SYNOPSIS
-
+    Lingua::EN::Fathom - Measure readability of English text
+    
+    =head1 SYNOPSIS
+    
     use Lingua::EN::Fathom;
-
+    
     my $text = Lingua::EN::Fathom->new();
     
     $text->analyse_file("sample.txt"); # Analyse contents of a text file
     
     $accumulate = 1; 
     $text->analyse_block($text_string,$accumulate); # Analyse contents of a text string
-
+    
     # Methods to return statistics on the analysed text
     $text->num_chars;
     $text->num_words;
     $text->percent_complex_words;
     $text->num_sentences;
     $text->num_text_lines;
-    $text->num_blank_lines;
+    $text->num_non_text_lines;
+    $text->num_blank_lines; # trailing EOLs are ignored
     $text->num_paragraphs;
     $text->syllables_per_word;
     $text->words_per_sentence;
@@ -33,15 +34,14 @@ Lingua::EN::Fathom - Measure readability of English text
     
     # get a hash of unique words, keyed by word  and occurrence as the value
     $text->unique_words
-
+    
     # Print a list of unique words
     %words = $text->unique_words;
     foreach $word ( sort keys %words )
     {
-      print("$words{$word} :$word\n");
+        print("$words{$word} :$word\n");
     }
-   
-
+    
 =head1 REQUIRES
 
 Lingua::EN::Syllable, Lingua::EN::Sentence
@@ -122,6 +122,11 @@ may occur before and after the full stop.
 Returns the number of lines containing some text in the analysed
 text file or block.
 
+=head2 num_non_text_lines
+
+Returns the number of lines containing no  text in the analysed
+text file or block.
+
 =head2 num_blank_lines
 
 Returns the number of lines NOT containing any text in the analysed
@@ -140,7 +145,6 @@ text file or block.
 
 Returns the average number of words per sentence in the analysed 
 text file or block.
-
 
 
 =head2 READABILITY
@@ -213,6 +217,7 @@ Average syllables per word : 1.7704
 Number of sentences        : 12
 Average words per sentence : 11.2500
 Number of text lines       : 13
+Number of non text lines   : 0
 Number of blank lines      : 8
 Number of paragraphs       : 4
 
@@ -239,15 +244,10 @@ Allow user control over what strictly defines a word
 =head1 LIMITATIONS
 
 The syllable count provided in Lingua::EN::Syllable is about 90% accurate
-
 Acronyms that contain vowels, like GPO, will be counted as words.
-
 The fog index should exclude proper names
 
 
-=head1 BUGS
-
-None known
 
 =head1 AUTHOR
 
@@ -271,7 +271,7 @@ use Lingua::EN::Sentence;
 use strict;
 use warnings;
 
-our $VERSION = '1.23';
+our $VERSION = '1.25';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
@@ -345,17 +345,22 @@ sub analyse_block
 
    my $in_paragraph = 0;
 
-   # by setting split limit to -1, we prevent split from stripping
-   # trailing line terminators
-   my @all_lines = split(/\n/,$block,-1);
+   # Split on EOL character 
+   # repeating trailing line terminators are stripped
+   my @all_lines = split(/\n/,$block);
    my $one_line;
    foreach $one_line ( @all_lines )
    {
       ($in_paragraph,$text) = _analyse_line($text,$one_line,$in_paragraph);
    }
    
-   my $sentences= Lingua::EN::Sentence::get_sentences($block);        
-   $text->{num_sentences} = scalar(@$sentences);      
+   my $sentences= Lingua::EN::Sentence::get_sentences($block);
+   if (defined($sentences))
+   {
+       $text->{num_sentences} = scalar(@$sentences);
+   }
+   
+         
    $text->_calculate_readability;
    
    return($text);
@@ -378,7 +383,6 @@ sub percent_complex_words
    my $text = shift;
    return($text->{percent_complex_words});
 }
-
 #------------------------------------------------------------------------------
 sub num_sentences
 {
@@ -390,6 +394,12 @@ sub num_text_lines
 {
    my $text = shift;
    return($text->{num_text_lines});
+}
+#------------------------------------------------------------------------------
+sub num_non_text_lines
+{
+   my $text = shift;
+   return($text->{num_non_text_lines});
 }
 #------------------------------------------------------------------------------
 sub num_blank_lines
@@ -469,6 +479,7 @@ sub report
    $report .= sprintf("Number of sentences        : %d\n",  $text->num_sentences);
    $report .= sprintf("Average words per sentence : %.4f\n",$text->words_per_sentence);
    $report .= sprintf("Number of text lines       : %d\n",  $text->num_text_lines);
+   $report .= sprintf("Number of non-text lines   : %d\n",  $text->num_non_text_lines);
    $report .= sprintf("Number of blank lines      : %d\n",  $text->num_blank_lines);
    $report .= sprintf("Number of paragraphs       : %d\n",  $text->num_paragraphs);
 
@@ -495,6 +506,7 @@ sub _initialize
    $text->{words_per_sentence} = 0;
    $text->{percent_complex_words} = 0;
    $text->{num_text_lines} = 0;
+   $text->{num_non_text_lines} = 0;
    $text->{num_blank_lines} = 0;
    $text->{num_paragraphs} = 0;
    $text->{num_sentences} = 0;
@@ -513,8 +525,8 @@ sub _initialize
 sub _analyse_line
 {
    my $text = shift;
+   
    my ($one_line,$in_paragraph) = @_;
-
    if ( $one_line =~ /\w/ )
    {
       chomp($one_line);
@@ -527,9 +539,14 @@ sub _analyse_line
          $in_paragraph = 1;
       }
    }
-   else # empty or blank line
-   {
+   elsif ($one_line eq '' ) # empty line
+   {    
       $text->{num_blank_lines}++;
+      $in_paragraph = 0;
+   }
+   elsif ($one_line =~ /^\W+$/ ) # non text
+   {
+      $text->{num_non_text_lines}++;
       $in_paragraph = 0;
    }
    return($in_paragraph,$text);
