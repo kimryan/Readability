@@ -10,8 +10,38 @@
     
     $text->analyse_file("sample.txt"); # Analyse contents of a text file
     
-    $accumulate = 1; 
+    $accumulate = 1;
+    my $text_string = q{
+    Returns the number of words in the analysed text file or block. A word must
+    consist of letters a-z with at least one vowel sound, and optionally an
+    apostrophe or hyphen.
+    
+    ##########################################
+    Items such as "&, K108, NSW" are not counted as words.
+    Common abbreviations such a U.S. or numbers like 1.23 will not denote the end of
+    a sentence.
+    };
+    
     $text->analyse_block($text_string,$accumulate); # Analyse contents of a text string
+    
+    print($text->report);  # Create a formatted report  
+       
+        Number of characters       : 312
+        Number of words            : 54
+        Percent of complex words   : 7.41
+        Average syllables per word : 1.4259
+        Number of sentences        : 4
+        Average words per sentence : 13.5000
+        Number of text lines       : 6
+        Number of non-text lines   : 1
+        Number of blank lines      : 2
+        Number of paragraphs       : 2   
+    
+        READABILITY INDICES
+        
+        Fog                        : 8.3630
+        Flesch                     : 72.4992
+        Flesch-Kincaid             : 6.5009    
     
     # Methods to return statistics on the analysed text
     $text->num_chars;
@@ -28,9 +58,6 @@
     $text->fog;
     $text->flesch;
     $text->kincaid;
-    
-    # Call all of the above methods and present as a formatted report
-    print($text->report);
     
     # get a hash of unique words, keyed by word  and occurrence as the value
     $text->unique_words
@@ -91,7 +118,7 @@ C<analyse_file> are prerequisites for all the following methods. An optional
 argument may be supplied to control accumulation of statistics. If set to
 a non zero value, all statistics are accumulated with each successive call.
 
-    $text->analyse_block($text_str);
+    $text->analyse_block($text_str,$accumulate);
 
 =head2 num_chars
 
@@ -116,7 +143,6 @@ Returns the number of sentences in the analysed text file or block. A sentence
 is any group of words and non words terminated with a single full stop. Spaces
 may occur before and after the full stop.
 
-
 =head2 num_text_lines
 
 Returns the number of lines containing some text in the analysed
@@ -124,12 +150,12 @@ text file or block.
 
 =head2 num_non_text_lines
 
-Returns the number of lines containing no  text in the analysed
+Returns the number of lines containing no text in the analysed
 text file or block.
 
 =head2 num_blank_lines
 
-Returns the number of lines NOT containing any text in the analysed
+Returns the number of empty lines in the analysed
 text file or block.
 
 =head2 num_paragraphs
@@ -271,7 +297,7 @@ use Lingua::EN::Sentence;
 use strict;
 use warnings;
 
-our $VERSION = '1.25';
+our $VERSION = '1.27';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
@@ -319,7 +345,7 @@ sub analyse_file
    close(IN_FH);
    
    my $sentences= Lingua::EN::Sentence::get_sentences($all_text);     
-   $text->{num_sentences} = scalar(@$sentences);   
+   $text->{num_sentences} += scalar(@$sentences);   
    $text->_calculate_readability;
 
    return($text);
@@ -357,7 +383,7 @@ sub analyse_block
    my $sentences= Lingua::EN::Sentence::get_sentences($block);
    if (defined($sentences))
    {
-       $text->{num_sentences} = scalar(@$sentences);
+       $text->{num_sentences} += scalar(@$sentences);
    }
    
          
@@ -424,6 +450,18 @@ sub words_per_sentence
 {
    my $text = shift;
    return($text->{words_per_sentence});
+}
+#------------------------------------------------------------------------------
+sub num_syllables
+{
+   my $text = shift;
+   return($text->{num_syllables});
+}
+#------------------------------------------------------------------------------
+sub complex_words
+{
+   my $text = shift;
+   return($text->{num_complex_words});
 }
 #------------------------------------------------------------------------------
 sub fog
